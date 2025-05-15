@@ -1,7 +1,6 @@
 import sqlite3
 from tkinter import *
 from tkinter import ttk
-from tkinter.ttk import Treeview
 from tkinter import messagebox
 
 def config():
@@ -69,11 +68,14 @@ def menusor():
             bevitel = Entry(uj_ablak)
             bevitel.grid(row=value[0], column=2, pady=10, padx=10, columnspan=2, ipadx=40)
 
-        bevitels = [Entry(uj_ablak) for _ in range(4)]
-        iro_bevitel, cim_bevitel, mufaj_bevitel, kiadas_eve_bevitel = bevitels
-        
-        for i in range(4):
-            bevitel[i].grid(row=i, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
+        iro_bevitel = Entry(uj_ablak)
+        iro_bevitel.grid(row=0, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
+        cim_bevitel = Entry(uj_ablak)
+        cim_bevitel.grid(row=1, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
+        mufaj_bevitel = Entry(uj_ablak)
+        mufaj_bevitel.grid(row=2, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
+        kiadas_eve_bevitel = Entry(uj_ablak)
+        kiadas_eve_bevitel.grid(row=3, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
 
         def mezo_torles():
             iro_bevitel.delete(0,END)
@@ -89,6 +91,7 @@ def menusor():
                 Label(uj_ablak, text=felugro_ablak).grid(row=1, column=1, sticky=N+E+W+S)
                 uj_konyv()
                 mezo_torles()
+                return
             try:
                 ev = int(kiadas_eve)
             except Exception as e:
@@ -96,9 +99,9 @@ def menusor():
                 Label(uj_ablak, text=felugro_ablak).grid(row=1, column=1, sticky=N + E + W + S)
                 uj_konyv()
                 mezo_torles()
-                curs.execute("""INSERT INTO konyvtar
-                            (iro, cim, mufaj, kiadas_eve) VALUES (?, ?, ?, ?)", (iro, cim, mufaj, kiadas_eve)""")
-                conn.commit()
+                return
+            curs.execute("""INSERT INTO konyvtar (iro, cim, mufaj, kiadas_eve) VALUES (?, ?, ?, ?)""", (iro, cim, mufaj, kiadas_eve))
+            conn.commit()
             mezo_torles()
             frissites()
 
@@ -166,12 +169,12 @@ def trw_tablazat():
 
     def kereses():
         oszlop = fejlecek[legordulo_menu.get()]  # oszlopnév lekérése
-        ertek = kereses_bevitel.get()
-        if not kereses_bevitel.get() or legordulo_menu.get() == list(fejlecek.keys())[0]:
+        ertek = kereses_bevitel.get().strip().lower()
+        if not ertek or legordulo_menu.get() == list(fejlecek.keys())[0]:
             messagebox.showwarning("Figyelem!", "Minden mező kitöltése kötelező!")
         else:
             treeview_tablazat.delete(*treeview_tablazat.get_children())
-            curs.execute(f"SELECT * FROM konyvtar WHERE {oszlop} LIKE ?", (f"%{ertek}%",))
+            curs.execute(f"SELECT * FROM konyvtar WHERE LOWER({oszlop}) LIKE ?", (f"%{ertek}%",))
             adatok = curs.fetchall()
 
             treeview_tablazat.tag_configure("paratlansor", background="white")
@@ -233,13 +236,11 @@ def trw_tablazat():
             treeview_tablazat.move(k, '', index)
         treeview_tablazat.heading(oszlop, command=lambda: rendezes(treeview_tablazat, oszlop, not visszafele))
 
-    values = [
-                ("Író", "c1", False),
-                ("Cím", "c2", False),
-                ("Műfaj", "c3", False),
-                ("Kiadás éve", "c4", False),
-                ("Olvasva", "c5", False)
-                ]
+    values = [("Író", "c1", False),
+            ("Cím", "c2", False),
+            ("Műfaj", "c3", False),
+            ("Kiadás éve", "c4", False),
+            ("Olvasva", "c5", False)]
     
     for value in values:
         treeview_tablazat.heading(value[1], text=value[0], command=lambda: rendezes(treeview_tablazat, value[1], value[2])) 
@@ -252,8 +253,6 @@ def trw_tablazat():
     treeview_tablazat.bind("<Double-Button-1>", feluliras)
 
 def frissites():
-    if not kereses_bevitel or legordulo_menu:
-        return 
     kereses_bevitel.delete(0,END)
     legordulo_menu.current(0)
     curs.execute("SELECT * FROM konyvtar")
@@ -269,7 +268,7 @@ def frissites():
             treeview_tablazat.insert("", "end", iid=adat[0], values=(adat[1], adat[2], adat[3], adat[4], adat[5]), tags=("paratlansor",))
         n +=1
 
-def feluliras(evet):
+def feluliras(event):
     feluliras_ablak = Toplevel()
     feluliras_ablak.title("Módosítás")
     feluliras_ablak_magassag = 300
@@ -289,22 +288,19 @@ def feluliras(evet):
         cimke = Label(feluliras_ablak, text=value[1], font="algerian 15")
         cimke.grid(row=value[0], column=0, pady=10, padx=10, columnspan=2)
 
-    iro_bevitel = StringVar(value=sor_elemek[0])
-    Entry(feluliras_ablak, textvariable=iro_bevitel).grid(row=0, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
-    cim_bevitel = StringVar(value=sor_elemek[1])
-    Entry(feluliras_ablak, textvariable=cim_bevitel).grid(row=1, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
-    mufaj_bevitel = StringVar(value=sor_elemek[2])
-    Entry(feluliras_ablak, textvariable=mufaj_bevitel).grid(row=2, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
-    kiadas_eve_bevitel = StringVar(value=sor_elemek[3])
-    Entry(feluliras_ablak, textvariable=kiadas_eve_bevitel).grid(row=3, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
-
+    bevitels = []
+    for idx, value in enumerate(values):
+        bevitel = Entry(feluliras_ablak)
+        bevitel.insert(0, sor_elemek[idx])
+        bevitel.grid(row=idx, column=2, pady=10, padx=10, columnspan=2, ipadx=40)
+        bevitels.append(bevitel)
     def felulir():
-        iro, cim, mufaj, kiadas_eve = iro_bevitel.get(), cim_bevitel.get(), mufaj_bevitel.get(), kiadas_eve_bevitel.get()
+        iro, cim, mufaj, kiadas_eve = bevitels[0].get(), bevitels[1].get(), bevitels[2].get(), bevitels[3].get()
         if cim and iro and mufaj and kiadas_eve:
             try:
                 ev = int(kiadas_eve)
-                curs.execute("""UPDATE konyvtar SET iro=?, cim=?, mufaj=?, kiadas_eve=? WHERE id=?",
-                            (iro, cim, mufaj, kiadas_eve, kijelolt_sor))""")
+                curs.execute("UPDATE konyvtar SET iro=?, cim=?, mufaj=?, kiadas_eve=? WHERE id=?",
+                            (iro, cim, mufaj, kiadas_eve, kijelolt_sor))
                 conn.commit()
                 frissites()
                 messagebox.showinfo("", "A felülírás sikerült")
