@@ -260,13 +260,11 @@ def frissites():
     treeview_tablazat.delete(*treeview_tablazat.get_children())
     treeview_tablazat.tag_configure("paratlansor", background="white")
     treeview_tablazat.tag_configure("parossor", background="lightblue")
-    n = 0
-    for adat in adatok:
+    for n, adat in enumerate(adatok):
         if n %2 == 0:
-            treeview_tablazat.insert("", "end", iid=adat[0], values=(adat[1], adat[2], adat[3], adat[4], adat[5]), tags=("parossor",))
+            treeview_tablazat.insert("", "end", iid=adat[0], values=(adat[1], adat[2], adat[3], adat[4]), tags=("parossor",))
         else:
-            treeview_tablazat.insert("", "end", iid=adat[0], values=(adat[1], adat[2], adat[3], adat[4], adat[5]), tags=("paratlansor",))
-        n +=1
+            treeview_tablazat.insert("", "end", iid=adat[0], values=(adat[1], adat[2], adat[3], adat[4]), tags=("paratlansor",))
 
 def feluliras(event):
     feluliras_ablak = Toplevel()
